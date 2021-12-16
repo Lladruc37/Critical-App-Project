@@ -13,6 +13,7 @@ class AuthGate extends StatelessWidget {
       builder: (BuildContext context, AsyncSnapshot<User?> snapshot) {
         if (!snapshot.hasData) {
           return const MaterialApp(
+            debugShowCheckedModeBanner: false,
             home: SignInScreen(
               providerConfigs: [
                 EmailProviderConfiguration(),
