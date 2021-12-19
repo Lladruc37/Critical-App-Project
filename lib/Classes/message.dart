@@ -19,8 +19,12 @@ class Message {
 
 Stream<List<Message>> chatSnapshots() {
   final db = FirebaseFirestore.instance;
-  final snapshots =
-      db.collection("chats").doc("General").collection("Messages").snapshots();
+  final snapshots = db
+      .collection("chats")
+      .doc("General")
+      .collection("Messages")
+      .orderBy("timestamp")
+      .snapshots();
   return snapshots.map((querySnapshot) {
     final messages = querySnapshot.docs;
     return messages.map((qdoc) => Message.fromFirestore(qdoc.data())).toList();
