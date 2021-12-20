@@ -23,7 +23,7 @@ Stream<List<Message>> chatSnapshots() {
       .collection("chats")
       .doc("General")
       .collection("Messages")
-      .orderBy("timestamp")
+      .orderBy("timestamp", descending: true)
       .snapshots();
   return snapshots.map((querySnapshot) {
     final messages = querySnapshot.docs;

@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 import 'Classes/message.dart';
 
@@ -33,12 +34,14 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   late TextEditingController controller;
   late ScrollController scrollController;
+  late bool emoji;
 
   @override
   void initState() {
     super.initState();
     controller = TextEditingController();
     scrollController = ScrollController();
+    emoji = false;
   }
 
   @override
@@ -51,6 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
@@ -87,12 +91,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 final messages = snapshot.data!;
                 return ListView.builder(
                   controller: scrollController,
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     DateTime lastDate;
-                    messages.first == messages[index]
+                    messages.last == messages[index]
                         ? lastDate = DateTime(0, 0, 0)
-                        : lastDate = messages[index - 1].timestamp;
+                        : lastDate = messages[index + 1].timestamp;
                     final message = messages[index];
                     bool isSender = widget.user.email == message.author;
                     return Column(
@@ -156,9 +161,25 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(controller: controller),
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            emoji = !emoji;
+                          });
+                        },
+                        icon: Icon(
+                          Icons.tag_faces,
+                          color: Colors.grey[400],
+                        ),
+                        padding: const EdgeInsets.only(left: 16.0),
+                        iconSize: 26.0,
+                      ),
+                    ),
+                  ),
                 ),
-                //Container(width: 10),
                 IconButton(
                   onPressed: () {
                     addMessage("General", controller.text,
@@ -173,6 +194,41 @@ class _ChatScreenState extends State<ChatScreen> {
                   iconSize: 26.0,
                 ),
               ],
+            ),
+          ),
+          Offstage(
+            offstage: emoji,
+            child: SizedBox(
+              height: 250,
+              child: EmojiPicker(
+                onEmojiSelected: (category, emoji) {
+                  // Do something when emoji is tapped
+                },
+                onBackspacePressed: () {
+                  // Backspace-Button tapped logic
+                  // Remove this line to also remove the button in the UI
+                },
+                config: const Config(
+                  columns: 7,
+                  emojiSizeMax: 32,
+                  verticalSpacing: 0,
+                  horizontalSpacing: 0,
+                  initCategory: Category.RECENT,
+                  bgColor: Color(0xFFF2F2F2),
+                  indicatorColor: Colors.blue,
+                  iconColor: Colors.grey,
+                  iconColorSelected: Colors.blue,
+                  progressIndicatorColor: Colors.blue,
+                  showRecentsTab: true,
+                  recentsLimit: 28,
+                  noRecentsText: "No Recents",
+                  noRecentsStyle:
+                      TextStyle(fontSize: 20, color: Colors.black26),
+                  tabIndicatorAnimDuration: kTabScrollDuration,
+                  categoryIcons: CategoryIcons(),
+                  buttonMode: ButtonMode.MATERIAL,
+                ),
+              ),
             ),
           ),
         ],
@@ -196,6 +252,3 @@ class NewDate extends StatelessWidget {
     );
   }
 }
-
-
-// ${widget.user.email.toString()}
