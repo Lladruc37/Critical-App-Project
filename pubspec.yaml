@@ -28,6 +28,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   emoji_picker_flutter: ^1.0.8
+  flutter_slidable: ^1.2.0
   chat_bubbles: ^1.1.0
   cloud_firestore: ^3.1.4
   cupertino_icons: ^1.0.2

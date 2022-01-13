@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:critical_app/Pages/emoji_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/gestures.dart';
@@ -241,7 +242,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   iconSize: 26.0,
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => EmojiManager(),
+                    ));
+                  },
                   icon: Icon(
                     Icons.emoji_objects_outlined,
                     color: Colors.grey[400],
