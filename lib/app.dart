@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:critical_app/Pages/emoji_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/gestures.dart';
@@ -10,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 import 'Classes/message.dart';
+import 'Pages/emoji_manager.dart';
 
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
@@ -270,16 +270,14 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Center(
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.chat_bubble,
-                      color: Colors.grey[400],
-                    ),
-                    padding: const EdgeInsets.only(left: 16.0),
-                    iconSize: 26.0,
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.chat_bubble,
+                    color: Colors.grey[400],
                   ),
+                  padding: const EdgeInsets.only(left: 16.0),
+                  iconSize: 26.0,
                 ),
                 VerticalDivider(
                   width: 0,
@@ -291,7 +289,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 IconButton(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => EmojiManager(),
+                      builder: (context) => const EmojiManager(),
                     ));
                   },
                   icon: Icon(
