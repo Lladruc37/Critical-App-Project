@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
@@ -53,6 +54,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fs = FirebaseStorage.instance;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
@@ -161,29 +163,41 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            emoji = !emoji;
-                          });
-                        },
-                        icon: Icon(
-                          Icons.tag_faces,
-                          color: Colors.grey[400],
+                  child: Focus(
+                    onFocusChange: (value) {
+                      if (value) {
+                        setState(() {
+                          emoji = false;
+                        });
+                      }
+                    },
+                    child: TextField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              emoji = !emoji;
+                            });
+                            FocusManager.instance.primaryFocus?.unfocus();
+                          },
+                          icon: Icon(
+                            Icons.tag_faces,
+                            color: Colors.grey[400],
+                          ),
+                          padding: const EdgeInsets.only(left: 16.0),
+                          iconSize: 26.0,
                         ),
-                        padding: const EdgeInsets.only(left: 16.0),
-                        iconSize: 26.0,
                       ),
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed: () {
-                    addMessage("General", controller.text,
-                        widget.user.email.toString());
+                    final text = controller.text.trim();
+                    if (text.isNotEmpty) {
+                      addMessage("General", text, widget.user.email.toString());
+                    }
                     controller.clear();
                   },
                   icon: Icon(
@@ -197,37 +211,18 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Offstage(
-            offstage: emoji,
+            offstage: !emoji,
             child: SizedBox(
               height: 250,
-              child: EmojiPicker(
-                onEmojiSelected: (category, emoji) {
-                  // Do something when emoji is tapped
+              child: FutureBuilder(
+                future: fs.ref("Fallen.png").getDownloadURL(),
+                builder:
+                    (BuildContext context, AsyncSnapshot<String> snapshot) {
+                  if (!snapshot.hasData) {
+                    return SizedBox();
+                  }
+                  return Image.network(snapshot.data!);
                 },
-                onBackspacePressed: () {
-                  // Backspace-Button tapped logic
-                  // Remove this line to also remove the button in the UI
-                },
-                config: const Config(
-                  columns: 7,
-                  emojiSizeMax: 32,
-                  verticalSpacing: 0,
-                  horizontalSpacing: 0,
-                  initCategory: Category.RECENT,
-                  bgColor: Color(0xFFF2F2F2),
-                  indicatorColor: Colors.blue,
-                  iconColor: Colors.grey,
-                  iconColorSelected: Colors.blue,
-                  progressIndicatorColor: Colors.blue,
-                  showRecentsTab: true,
-                  recentsLimit: 28,
-                  noRecentsText: "No Recents",
-                  noRecentsStyle:
-                      TextStyle(fontSize: 20, color: Colors.black26),
-                  tabIndicatorAnimDuration: kTabScrollDuration,
-                  categoryIcons: CategoryIcons(),
-                  buttonMode: ButtonMode.MATERIAL,
-                ),
               ),
             ),
           ),
