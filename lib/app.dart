@@ -37,6 +37,10 @@ class _ChatScreenState extends State<ChatScreen> {
   late TextEditingController controller;
   late ScrollController scrollController;
   late bool emoji;
+  Map<int, String> emojiMap = {
+    0: "Fallen.png",
+    1: "RemiDance.gif",
+  };
 
   @override
   void initState() {
@@ -215,31 +219,74 @@ class _ChatScreenState extends State<ChatScreen> {
             offstage: !emoji,
             child: SizedBox(
               height: 250,
-              child: FutureBuilder(
-                future: fs.ref("Fallen.png").getDownloadURL(),
-                builder:
-                    (BuildContext context, AsyncSnapshot<String> snapshot) {
-                  if (!snapshot.hasData) {
-                    return SizedBox();
-                  }
-                  return Image.network(snapshot.data!);
-                },
-              ),
+              child: Column(children: [
+                const Divider(
+                  height: 0,
+                  thickness: 2,
+                ),
+                Container(
+                  padding: const EdgeInsets.all(6.0),
+                  height: 250,
+                  child: GridView.builder(
+                    itemCount: emojiMap.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border:
+                              Border.all(color: Colors.grey[850]!, width: 2),
+                        ),
+                        child: FutureBuilder(
+                          future: fs.ref(emojiMap[index]).getDownloadURL(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<String> snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            return SizedBox(
+                              height: 64,
+                              child: Image.network(snapshot.data!),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5,
+                    ),
+                  ),
+                ),
+              ]),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(color: Colors.grey[850]),
+          const Divider(
+            height: 0,
+            thickness: 2,
+          ),
+          SizedBox(
+            height: 70,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.chat_bubble,
-                    color: Colors.grey[400],
+                Center(
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: Icon(
+                      Icons.chat_bubble,
+                      color: Colors.grey[400],
+                    ),
+                    padding: const EdgeInsets.only(left: 16.0),
+                    iconSize: 26.0,
                   ),
-                  padding: const EdgeInsets.only(left: 16.0),
-                  iconSize: 26.0,
+                ),
+                VerticalDivider(
+                  width: 0,
+                  thickness: 2,
+                  indent: 10,
+                  endIndent: 10,
+                  color: Colors.grey[600],
                 ),
                 IconButton(
                   onPressed: () {
@@ -254,6 +301,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   padding: const EdgeInsets.only(left: 16.0),
                   iconSize: 26.0,
                 ),
+                VerticalDivider(
+                  width: 0,
+                  thickness: 2,
+                  indent: 10,
+                  endIndent: 10,
+                  color: Colors.grey[600],
+                ),
                 IconButton(
                   onPressed: () {},
                   icon: Icon(
@@ -262,6 +316,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   padding: const EdgeInsets.only(left: 16.0),
                   iconSize: 26.0,
+                ),
+                VerticalDivider(
+                  width: 0,
+                  thickness: 2,
+                  indent: 10,
+                  endIndent: 10,
+                  color: Colors.grey[600],
                 ),
                 IconButton(
                   onPressed: () {},
