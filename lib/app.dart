@@ -137,7 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           alignment:
                               isSender ? Alignment.topRight : Alignment.topLeft,
                           child: Text(
-                            '${message.timestamp.hour}:${message.timestamp.second}',
+                            '${message.timestamp.hour}:${message.timestamp.minute < 10 ? '0' : ''}${message.timestamp.minute}',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[500],
@@ -231,6 +231,50 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
+          Container(
+            decoration: BoxDecoration(color: Colors.grey[850]),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.chat_bubble,
+                    color: Colors.grey[400],
+                  ),
+                  padding: const EdgeInsets.only(left: 16.0),
+                  iconSize: 26.0,
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.emoji_objects_outlined,
+                    color: Colors.grey[400],
+                  ),
+                  padding: const EdgeInsets.only(left: 16.0),
+                  iconSize: 26.0,
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.connect_without_contact_rounded,
+                    color: Colors.grey[400],
+                  ),
+                  padding: const EdgeInsets.only(left: 16.0),
+                  iconSize: 26.0,
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.person,
+                    color: Colors.grey[400],
+                  ),
+                  padding: const EdgeInsets.only(left: 16.0),
+                  iconSize: 26.0,
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );
