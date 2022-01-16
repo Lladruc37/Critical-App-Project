@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:critical_app/Pages/channel_drawer.dart';
 
 import 'Classes/message.dart';
 import 'Pages/emoji_manager.dart';
@@ -141,6 +142,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
+      drawer: ChannelDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
         title: Text(
