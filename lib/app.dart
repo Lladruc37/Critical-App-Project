@@ -1,12 +1,11 @@
-import 'dart:math';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'Classes/message.dart';
 import 'Pages/emoji_manager.dart';
@@ -42,24 +41,103 @@ class _ChatScreenState extends State<ChatScreen> {
     1: "RemiDance.gif",
   };
 
+  XFile? imageFile;
+
+  void _openGallery(BuildContext context) async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    setState(() {
+      imageFile = pickedFile!;
+    });
+
+    Navigator.pop(context);
+  }
+
+  void _openCamera(BuildContext context) async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+    );
+    setState(() {
+      imageFile = pickedFile!;
+    });
+    Navigator.pop(context);
+  }
+
+  Future<void> _showChoiceDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              "Choose option",
+              style: TextStyle(color: Colors.blue),
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  const Divider(
+                    height: 1,
+                    color: Colors.blue,
+                  ),
+                  ListTile(
+                    onTap: () {
+                      _openGallery(context);
+                    },
+                    title: const Text("Gallery"),
+                    leading: const Icon(
+                      Icons.account_box,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const Divider(
+                    height: 1,
+                    color: Colors.blue,
+                  ),
+                  ListTile(
+                    onTap: () {
+                      _openCamera(context);
+                    },
+                    title: const Text("Camera"),
+                    leading: const Icon(
+                      Icons.camera,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Future<void> uploadFileAbs(String filePath, String name) async {
+    File file = File(filePath);
+    await FirebaseStorage.instance.ref('Files/$name').putFile(file);
+    setState(() {
+      imageFile = null;
+    });
+  }
+
   @override
   void initState() {
-    super.initState();
     controller = TextEditingController();
     scrollController = ScrollController();
     emoji = false;
+    super.initState();
   }
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
     scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final fs = FirebaseStorage.instance;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
@@ -128,17 +206,48 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                         ),
-                        BubbleNormal(
-                          text: message.text,
-                          isSender: isSender,
-                          color:
-                              isSender ? Colors.blue[400]! : Colors.grey[400]!,
-                          tail: true,
-                          textStyle: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                          ),
-                        ),
+                        message.type == 0
+                            ? BubbleNormal(
+                                text: message.text,
+                                isSender: isSender,
+                                color: isSender
+                                    ? Colors.blue[400]!
+                                    : Colors.grey[400]!,
+                                tail: true,
+                                textStyle: const TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.black,
+                                ),
+                              )
+                            : Container(),
+                        message.type == 1
+                            ? Container(
+                                alignment: isSender
+                                    ? Alignment.topRight
+                                    : Alignment.topLeft,
+                                child: FutureBuilder(
+                                  future: fs.ref(message.text).getDownloadURL(),
+                                  builder: (BuildContext context,
+                                      AsyncSnapshot<String> snapshot) {
+                                    if (!snapshot.hasData) {
+                                      return const SizedBox();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0, horizontal: 16.0),
+                                      child: ClipRRect(
+                                        borderRadius: const BorderRadius.all(
+                                            Radius.circular(10.0)),
+                                        child: Image.network(
+                                          snapshot.data!,
+                                          width: 250,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Container(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           alignment:
@@ -159,6 +268,42 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
+          Container(
+            color: Colors.grey[700],
+            alignment: Alignment.topLeft,
+            child: imageFile != null
+                ? Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(44.0, 4.0, 16.0, 10.0),
+                        child: ClipRRect(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(10.0)),
+                          child: Image.file(
+                            File(imageFile!.path),
+                            width: 175,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 8.0),
+                        child: FloatingActionButton(
+                          mini: true,
+                          onPressed: () {
+                            setState(() {
+                              imageFile = null;
+                            });
+                          },
+                          child: const Icon(Icons.delete),
+                        ),
+                      ),
+                    ],
+                  )
+                : Container(),
+          ),
           const Divider(
             height: 0,
             thickness: 2,
@@ -167,6 +312,14 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
+                IconButton(
+                  onPressed: () {
+                    _showChoiceDialog(context);
+                  },
+                  icon: const Icon(Icons.photo),
+                  color: Colors.grey[400],
+                  padding: const EdgeInsets.only(right: 16.0),
+                ),
                 Expanded(
                   child: Focus(
                     onFocusChange: (value) {
@@ -201,9 +354,18 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: () {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
-                      addMessage("General", text, widget.user.email.toString());
+                      addMessage(
+                          "General", text, widget.user.email.toString(), 0);
+                      controller.clear();
                     }
-                    controller.clear();
+                    if (imageFile != null) {
+                      String name = imageFile!.path.split('/').last;
+                      uploadFileAbs(imageFile!.path, name).then((value) {
+                        addMessage("General", 'Files/$name',
+                            widget.user.email.toString(), 1);
+                      });
+                    }
+                    FocusManager.instance.primaryFocus?.unfocus();
                   },
                   icon: Icon(
                     Icons.send,

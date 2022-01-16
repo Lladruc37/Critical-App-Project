@@ -4,16 +4,19 @@ class Message {
   String text;
   DateTime timestamp;
   String author;
+  int type;
 
   Message.fromFirestore(Map<String, dynamic> data)
       : text = data['text'],
         timestamp = (data['timestamp'] as Timestamp).toDate(),
-        author = data['author'];
+        author = data['author'],
+        type = data['type'];
 
   Map<String, dynamic> toFirestore() => {
         'text': text,
         'timestamp': Timestamp.fromDate(timestamp),
         'author': author,
+        'type': type,
       };
 }
 
@@ -31,11 +34,13 @@ Stream<List<Message>> chatSnapshots() {
   });
 }
 
-Future<void> addMessage(String chat, String text, String author) async {
+Future<void> addMessage(
+    String chat, String text, String author, int type) async {
   final db = FirebaseFirestore.instance;
   await db.collection("chats").doc(chat).collection("Messages").add({
     'text': text,
     'author': author,
     'timestamp': Timestamp.now(),
+    'type': type,
   });
 }

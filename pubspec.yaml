@@ -27,11 +27,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  emoji_picker_flutter: ^1.0.8
-  flutter_slidable: ^1.2.0
   chat_bubbles: ^1.1.0
   cloud_firestore: ^3.1.4
-  cupertino_icons: ^1.0.2
   firebase_auth: ^3.3.3
   firebase_core: ^1.10.5
   firestore_ui: ^1.22.0
@@ -41,6 +38,7 @@ dependencies:
   flutterfire_ui: ^0.2.0+2
   google_sign_in: ^5.2.1
   firebase_storage: ^10.2.5
+  image_picker: ^0.8.4+4
 
 dev_dependencies:
   flutter_lints: ^1.0.0
