@@ -17,30 +17,27 @@ class EmojiManager extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Emoji Page'),
       ),
-      body: EmojiList(),
+      body: EmojiList(eMap: emojimap),
     );
   }
 }
 
 class EmojiList extends StatefulWidget {
-  const EmojiList({
-    Key? key,
-  }) : super(key: key);
+  final Map<int, String> eMap;
+  const EmojiList({Key? key, required this.eMap}) : super(key: key);
 
   @override
   State<EmojiList> createState() => _EmojiListState();
 }
 
 class _EmojiListState extends State<EmojiList> {
-  late List<CustomEmoji> _cemojis;
+  final List<CustomEmoji> _cemojis = [];
   @override
   void initState() {
-    _cemojis = [
-      CustomEmoji("path1", "primero"),
-      CustomEmoji("path2", "segundo"),
-      CustomEmoji("path3", "tercero"),
-    ];
-
+    for (int i = 0; i < widget.eMap.length; ++i) {
+      String name = widget.eMap[i]!.split(".").first;
+      _cemojis.add(CustomEmoji(widget.eMap[i]!, name));
+    }
     super.initState();
   }
 
@@ -50,8 +47,10 @@ class _EmojiListState extends State<EmojiList> {
         itemCount: _cemojis.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(_cemojis[index].code),
-          );
+              title: Row(children: [
+            Text(_cemojis[index].path),
+            Text(_cemojis[index].code),
+          ]));
         });
   }
 }
