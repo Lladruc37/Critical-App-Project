@@ -453,7 +453,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 IconButton(
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const EmojiManager(),
+                      builder: (context) => EmojiManager(emojimap: emojiMap),
                     ));
                   },
                   icon: Icon(
