@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+typedef StringVoidFunc = void Function(String);
+
 class ChannelDrawer extends StatefulWidget {
-  const ChannelDrawer({Key? key}) : super(key: key);
+  StringVoidFunc updateChatScreen;
+  ChannelDrawer({Key? key, required this.updateChatScreen}) : super(key: key);
 
   @override
   _ChannelDrawerState createState() => _ChannelDrawerState();
 }
 
 class _ChannelDrawerState extends State<ChannelDrawer> {
-  final padding = EdgeInsets.symmetric(horizontal: 20);
+  final padding = const EdgeInsets.symmetric(horizontal: 20);
   @override
   void initState() {
     scrollController = ScrollController();
@@ -47,13 +50,14 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
                 controller: scrollController,
                 itemCount: 10,
                 itemBuilder: (context, index) {
+                  String text = 'Channel ${index + 1}';
                   return Column(
                     children: [
                       buildMenuItem(
-                        text: 'Channel ${index + 1}',
+                        text: text,
                         onClicked: () {
-                          selectedItem(context, 0);
-                          
+                          widget.updateChatScreen(text);
+                          selectedItem(context, text);
                         },
                       ),
                     ],
@@ -125,11 +129,8 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
     );
   }
 
-  void selectedItem(BuildContext context, int index) {
-    Navigator.of(context).pop();
-    switch (index) {
-      case 0:
-        break;
-    }
+  void selectedItem(BuildContext context, String chat) {
+    String newChat = chat;
+    Navigator.pop(context, newChat);
   }
 }

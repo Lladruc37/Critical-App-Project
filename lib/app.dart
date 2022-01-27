@@ -12,6 +12,8 @@ import 'package:critical_app/Pages/channel_drawer.dart';
 import 'Classes/message.dart';
 import 'Pages/emoji_manager.dart';
 
+typedef StringVoidFunc = void Function(String);
+
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
 
@@ -124,6 +126,26 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // void _awaitForDrawer(BuildContext context) {
+  //   //Scaffold.of(context).openDrawer()
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => ChannelDrawer(updateChatScreen: (String newChat) {
+  //         setState(() {
+  //           chat = newChat;
+  //         });
+  //       }),
+  //     ),
+  //   );
+  // }
+
+  // void updateScreenFunc(String newChat) {
+  //   setState(() {
+  //     chat = newChat;
+  //   });
+  // }
+
   @override
   void initState() {
     controller = TextEditingController();
@@ -146,13 +168,19 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
-      drawer: const ChannelDrawer(),
+      drawer: ChannelDrawer(updateChatScreen: (String newChat) {
+        setState(() {
+          chat = newChat;
+        });
+      }),
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
         leading: Builder(builder: (context) {
           return IconButton(
             icon: Icon(Icons.padding_outlined, color: Colors.grey[400]),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
           );
         }),
         title: Text(
