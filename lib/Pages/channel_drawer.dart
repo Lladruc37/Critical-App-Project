@@ -51,7 +51,10 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
                     children: [
                       buildMenuItem(
                         text: 'Channel ${index + 1}',
-                        onClicked: () => selectedItem(context, 0),
+                        onClicked: () {
+                          selectedItem(context, 0);
+                          
+                        },
                       ),
                     ],
                   );

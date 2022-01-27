@@ -145,6 +145,12 @@ class _ChatScreenState extends State<ChatScreen> {
       drawer: ChannelDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
+        leading: Builder(builder: (context) {
+          return IconButton(
+            icon: Icon(Icons.padding_outlined, color: Colors.grey[400]),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          );
+        }),
         title: Text(
           "General",
           style: TextStyle(color: Colors.grey[400]),
