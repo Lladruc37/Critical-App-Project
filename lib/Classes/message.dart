@@ -20,11 +20,11 @@ class Message {
       };
 }
 
-Stream<List<Message>> chatSnapshots() {
+Stream<List<Message>> chatSnapshots(String chat) {
   final db = FirebaseFirestore.instance;
   final snapshots = db
       .collection("chats")
-      .doc("General")
+      .doc(chat)
       .collection("Messages")
       .orderBy("timestamp", descending: true)
       .snapshots();

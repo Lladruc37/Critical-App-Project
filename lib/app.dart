@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:critical_app/Pages/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -20,14 +21,19 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.grey),
-      home: ChatScreen(user: user),
+      home: ChatScreen(
+        user: user,
+        chat: "General",
+      ),
     );
   }
 }
 
 class ChatScreen extends StatefulWidget {
   final User user;
-  const ChatScreen({Key? key, required this.user}) : super(key: key);
+  final String chat;
+  const ChatScreen({Key? key, required this.user, required this.chat})
+      : super(key: key);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -142,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
-      drawer: ChannelDrawer(),
+      drawer: const ChannelDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
         leading: Builder(builder: (context) {
@@ -152,7 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         }),
         title: Text(
-          "General",
+          widget.chat,
           style: TextStyle(color: Colors.grey[400]),
         ),
         actions: [
@@ -171,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: chatSnapshots(),
+              stream: chatSnapshots(widget.chat),
               builder: (
                 BuildContext context,
                 AsyncSnapshot<List<Message>> snapshot,
@@ -363,13 +369,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
                       addMessage(
-                          "General", text, widget.user.email.toString(), 0);
+                          widget.chat, text, widget.user.email.toString(), 0);
                       controller.clear();
                     }
                     if (imageFile != null) {
                       String name = imageFile!.path.split('/').last;
                       uploadFileAbs(imageFile!.path, name).then((value) {
-                        addMessage("General", 'Files/$name',
+                        addMessage(widget.chat, 'Files/$name',
                             widget.user.email.toString(), 1);
                       });
                     }
@@ -458,9 +464,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 IconButton(
                   onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => EmojiManager(emojimap: emojiMap),
-                    ));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EmojiManager(emojimap: emojiMap),
+                      ),
+                    );
                   },
                   icon: Icon(
                     Icons.emoji_objects_outlined,
@@ -493,7 +501,15 @@ class _ChatScreenState extends State<ChatScreen> {
                   color: Colors.grey[600],
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                          userMail: widget.user.email!,
+                        ),
+                      ),
+                    );
+                  },
                   icon: Icon(
                     Icons.person,
                     color: Colors.grey[400],
