@@ -23,7 +23,6 @@ class App extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.grey),
       home: ChatScreen(
         user: user,
-        chat: "General",
       ),
     );
   }
@@ -31,9 +30,7 @@ class App extends StatelessWidget {
 
 class ChatScreen extends StatefulWidget {
   final User user;
-  final String chat;
-  const ChatScreen({Key? key, required this.user, required this.chat})
-      : super(key: key);
+  const ChatScreen({Key? key, required this.user}) : super(key: key);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -47,6 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
     0: "Fallen.png",
     1: "RemiDance.gif",
   };
+  String chat = "General";
 
   XFile? imageFile;
 
@@ -158,7 +156,7 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         }),
         title: Text(
-          widget.chat,
+          chat,
           style: TextStyle(color: Colors.grey[400]),
         ),
         actions: [
@@ -177,7 +175,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: chatSnapshots(widget.chat),
+              stream: chatSnapshots(chat),
               builder: (
                 BuildContext context,
                 AsyncSnapshot<List<Message>> snapshot,
@@ -368,14 +366,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: () {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
-                      addMessage(
-                          widget.chat, text, widget.user.email.toString(), 0);
+                      addMessage(chat, text, widget.user.email.toString(), 0);
                       controller.clear();
                     }
                     if (imageFile != null) {
                       String name = imageFile!.path.split('/').last;
                       uploadFileAbs(imageFile!.path, name).then((value) {
-                        addMessage(widget.chat, 'Files/$name',
+                        addMessage(chat, 'Files/$name',
                             widget.user.email.toString(), 1);
                       });
                     }
@@ -447,7 +444,11 @@ class _ChatScreenState extends State<ChatScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      chat = "Memes";
+                    });
+                  },
                   icon: Icon(
                     Icons.chat_bubble,
                     color: Colors.grey[400],

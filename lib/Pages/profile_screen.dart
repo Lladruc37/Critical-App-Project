@@ -28,21 +28,20 @@ class ProfileScreen extends StatelessWidget {
                   return ListView.builder(
                     itemCount: 2,
                     itemBuilder: (context, index) {
-                      switch (index) {
-                        case 0:
-                          return Text(doc["Name"]);
-                        case 1:
-                          return Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Color.fromARGB(doc["ColorA"],
-                                  doc["ColorR"], doc["ColorG"], doc["ColorB"]),
-                            ),
-                          );
-                        default:
-                          break;
-                      }
-                      return Container();
+                      return Container(
+                        padding: const EdgeInsets.all(8.0),
+                        child: index == 0
+                            ? Text(doc["Name"])
+                            : Container(
+                                decoration: BoxDecoration(
+                                  color: Color.fromARGB(
+                                      doc["ColorA"],
+                                      doc["ColorR"],
+                                      doc["ColorG"],
+                                      doc["ColorB"]),
+                                ),
+                              ),
+                      );
                     },
                   );
                 } else {
