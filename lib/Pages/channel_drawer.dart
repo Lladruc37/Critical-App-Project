@@ -4,7 +4,14 @@ typedef StringVoidFunc = void Function(String);
 
 class ChannelDrawer extends StatefulWidget {
   StringVoidFunc updateChatScreen;
-  ChannelDrawer({Key? key, required this.updateChatScreen}) : super(key: key);
+  String chat;
+  String user;
+  ChannelDrawer(
+      {Key? key,
+      required this.updateChatScreen,
+      required this.chat,
+      required this.user})
+      : super(key: key);
 
   @override
   _ChannelDrawerState createState() => _ChannelDrawerState();
@@ -27,10 +34,9 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
   late ScrollController scrollController;
   @override
   Widget build(BuildContext context) {
-    String account = 'Your account';
     return Drawer(
       child: Material(
-        color: Colors.blue.shade800,
+        color: Colors.grey.shade800,
         child: Column(
           children: [
             const SizedBox(height: 18),
@@ -47,14 +53,49 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
               ),
               height: 500,
               child: ListView.separated(
+                padding: EdgeInsets
+                    .zero, //This is necessary to remove a ListView's default padding
                 controller: scrollController,
-                itemCount: 10,
+                itemCount: 8,
                 itemBuilder: (context, index) {
-                  String text = 'Channel ${index + 1}';
+                  String text;
+
+                  switch (index) {
+                    case 0:
+                      text = "General";
+                      break;
+                    case 1:
+                      text = "General_2";
+                      break;
+                    case 2:
+                      text = "Announcements";
+                      break;
+                    case 3:
+                      text = "Memes";
+                      break;
+                    case 4:
+                      text = "Gaming";
+                      break;
+                    case 5:
+                      text = "DnD";
+                      break;
+                    case 6:
+                      text = "Work";
+                      break;
+                    case 7:
+                      text = "Random";
+                      break;
+                    default:
+                      text = "";
+                  }
+
                   return Column(
                     children: [
                       buildMenuItem(
                         text: text,
+                        color: widget.chat == text
+                            ? Colors.blue.shade300
+                            : Colors.white,
                         onClicked: () {
                           widget.updateChatScreen(text);
                           selectedItem(context, text);
@@ -66,39 +107,28 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
                 separatorBuilder: (context, index) {
                   return const Divider(color: Colors.white70);
                 },
-                //padding: padding,
-                // children: [
-                //   const SizedBox(height: 48),
-                //   const Center(
-                //     child: Text(
-                //       'List of chats',
-                //       style: TextStyle(color: Colors.white, fontSize: 30),
-                //     ),
-                //   ),
-                //   const Divider(color: Colors.black),
-                //   buildMenuItem(
-                //     text: 'Channel 1',
-                //     onClicked: () => selectedItem(context, 0),
-                //   ),
-                //   const Divider(color: Colors.white70),
-                //   buildMenuItem(
-                //     text: 'Channel 2',
-                //     onClicked: () => selectedItem(context, 1),
-                //   ),
-                //   const Divider(color: Colors.white70),
-                //   buildMenuItem(
-                //     text: 'Channel 3',
-                //     onClicked: () => selectedItem(context, 2),
-                //   ),
-                //   const Divider(color: Colors.white70),
-                //   buildMenuItem(
-                //     text: 'Channel 4',
-                //     onClicked: () => selectedItem(context, 3),
-                //   ),
-                //   const Divider(color: Colors.white70),
-                // ],
               ),
             ),
+            const Spacer(),
+            const Text(
+              "Logged in as:",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+              ),
+            ),
+            const Padding(padding: EdgeInsets.only(top: 2.0)),
+            Text(
+              widget.user,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
+            ),
+            const Spacer(),
+            // Row(
+            //   children: [Text("a")],
+            // )
           ],
         ),
       ),
@@ -115,14 +145,16 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
 
   Widget buildMenuItem({
     required String text,
+    Color color = Colors.white,
     //required IconData icon,
     VoidCallback? onClicked,
   }) {
-    final color = Colors.white;
+    //final color = Colors.white;
     final hoverColor = Colors.white70;
     final size = 20.0;
     return ListTile(
       //leading: Icon(icon, color: color),
+
       title: Text(text, style: TextStyle(color: color, fontSize: size)),
       hoverColor: hoverColor,
       onTap: onClicked,

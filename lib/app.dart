@@ -168,11 +168,15 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
-      drawer: ChannelDrawer(updateChatScreen: (String newChat) {
-        setState(() {
-          chat = newChat;
-        });
-      }),
+      drawer: ChannelDrawer(
+        user: widget.user.email!,
+        updateChatScreen: (String newChat) {
+          setState(() {
+            chat = newChat;
+          });
+        },
+        chat: chat,
+      ),
       appBar: AppBar(
         backgroundColor: Colors.grey[700],
         leading: Builder(builder: (context) {
