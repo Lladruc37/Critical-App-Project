@@ -712,7 +712,7 @@ class BottomBar extends StatelessWidget {
                       : Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 icon: Icon(
-                  screen == 0 ? Icons.chat_bubble : Icons.arrow_back_rounded,
+                  Icons.chat_bubble,
                   color: Colors.grey[400],
                 ),
                 padding: const EdgeInsets.only(left: 16.0),
