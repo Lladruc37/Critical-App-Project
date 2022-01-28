@@ -220,7 +220,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       emojiList.clear();
                       for (var item in files) {
                         emojiList.add(CustomEmoji(
-                            item.name,
+                            "Emojis/" + item.name,
                             item.name
                                 .substring(0, item.name.lastIndexOf("."))));
                       }
