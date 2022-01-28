@@ -1,17 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:critical_app/Classes/user.dart';
+import 'package:critical_app/Pages/emoji_manager.dart';
 import 'package:critical_app/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userMail;
-  final Map<int, String> emojiMap;
+  List<CustomEmoji> emojiList;
 
-  const ProfileScreen({
+  ProfileScreen({
     Key? key,
     required this.userMail,
-    required this.emojiMap,
+    required this.emojiList,
   }) : super(key: key);
 
   @override
@@ -160,9 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           BottomBar(
+            emojiList: widget.emojiList,
             screen: 2,
             email: widget.userMail,
-            emojiMap: widget.emojiMap,
           ),
         ],
       ),

@@ -1,16 +1,20 @@
+import 'dart:io';
+import 'package:critical_app/Classes/firebasefile.dart';
+import 'package:critical_app/app.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CustomEmoji {
   String path;
   String code;
   bool fav;
-  CustomEmoji(this.path, this.code) : fav = false;
+  CustomEmoji(this.path, this.code, {this.fav = false});
 }
 
 class EmojiManager extends StatelessWidget {
-  final Map<int, String> emojimap;
-  const EmojiManager({Key? key, required this.emojimap}) : super(key: key);
+  List<CustomEmoji> cemojis = [];
+  EmojiManager({Key? key, required this.cemojis}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,28 +24,102 @@ class EmojiManager extends StatelessWidget {
         title: const Text('Emoji Page'),
         backgroundColor: Colors.grey[700],
       ),
-      body: EmojiList(eMap: emojimap),
+      body: EmojiList(emojiList: cemojis),
     );
   }
 }
 
 class EmojiList extends StatefulWidget {
-  final Map<int, String> eMap;
-  const EmojiList({Key? key, required this.eMap}) : super(key: key);
+  List<CustomEmoji> emojiList;
+  EmojiList({Key? key, required this.emojiList}) : super(key: key);
 
   @override
   State<EmojiList> createState() => _EmojiListState();
 }
 
 class _EmojiListState extends State<EmojiList> {
-  final List<CustomEmoji> _cemojis = [];
+  XFile? imageFile;
+  late Future<List<FirebaseFile>> futureFiles;
   @override
   void initState() {
-    for (int i = 0; i < widget.eMap.length; ++i) {
-      String name = widget.eMap[i]!.split(".").first;
-      _cemojis.add(CustomEmoji(widget.eMap[i]!, name));
-    }
+    futureFiles = FirebaseApi.listAll('Emojis/');
     super.initState();
+  }
+
+  void _openGallery(BuildContext context) async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    setState(() {
+      imageFile = pickedFile!;
+    });
+
+    Navigator.pop(context);
+  }
+
+  void _openCamera(BuildContext context) async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+    );
+    setState(() {
+      imageFile = pickedFile!;
+    });
+    Navigator.pop(context);
+  }
+
+  Future<void> _showChoiceDialog(BuildContext context) {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              "Choose option",
+              style: TextStyle(color: Colors.blue),
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: [
+                  const Divider(
+                    height: 1,
+                    color: Colors.blue,
+                  ),
+                  ListTile(
+                    onTap: () {
+                      _openGallery(context);
+                    },
+                    title: const Text("Gallery"),
+                    leading: const Icon(
+                      Icons.account_box,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const Divider(
+                    height: 1,
+                    color: Colors.blue,
+                  ),
+                  ListTile(
+                    onTap: () {
+                      _openCamera(context);
+                    },
+                    title: const Text("Camera"),
+                    leading: const Icon(
+                      Icons.camera,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Future<void> uploadFileAbs(String filePath, String name) async {
+    File file = File(filePath);
+    await FirebaseStorage.instance.ref('Emojis/$name').putFile(file);
+    setState(() {
+      imageFile = null;
+    });
   }
 
   @override
@@ -49,22 +127,56 @@ class _EmojiListState extends State<EmojiList> {
     final fs = FirebaseStorage.instance;
     return Column(
       children: [
-        Row(
-          //mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: const [
-            Text("Emoticonos"),
-            Padding(
-              padding: EdgeInsets.only(left: 50),
-              child: Text("Alias"),
+        Padding(
+          padding: const EdgeInsets.only(left: 300),
+          child: IconButton(
+            onPressed: () {
+              // String name = imageFile!.path.split('/').last;
+              // uploadFileAbs(imageFile!.path, name).then((value) {
+              //   _cemojis.add(CustomEmoji(name, name));
+              // });
+              _showChoiceDialog(context);
+            },
+            iconSize: 40,
+            icon: const Icon(
+              Icons.add,
             ),
-            Text("Manage"),
-          ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Row(
+            //mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: const [
+              Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: Text(
+                  "Emoticonos",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+                child: Text(
+                  "Alias",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 120),
+                child: Text(
+                  "Manage",
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
+            ],
+          ),
         ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: ListView.builder(
-                itemCount: _cemojis.length,
+                itemCount: widget.emojiList.length,
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
@@ -72,7 +184,7 @@ class _EmojiListState extends State<EmojiList> {
                       ListTile(
                         leading: FutureBuilder(
                           future: fs
-                              .ref(_cemojis.elementAt(index).path)
+                              .ref(widget.emojiList.elementAt(index).path)
                               .getDownloadURL(),
                           builder: (BuildContext context,
                               AsyncSnapshot<String> snapshot) {
@@ -85,7 +197,10 @@ class _EmojiListState extends State<EmojiList> {
                             );
                           },
                         ),
-                        title: Text(_cemojis.elementAt(index).code),
+                        title: Padding(
+                          padding: const EdgeInsets.only(left: 38),
+                          child: Text(widget.emojiList.elementAt(index).code),
+                        ),
                         trailing: SizedBox(
                           width: 150,
                           child: Center(
@@ -95,14 +210,17 @@ class _EmojiListState extends State<EmojiList> {
                                 IconButton(
                                   onPressed: () {
                                     setState(() {
-                                      _cemojis.elementAt(index).fav =
-                                          !_cemojis.elementAt(index).fav;
+                                      widget.emojiList.elementAt(index).fav =
+                                          !widget.emojiList
+                                              .elementAt(index)
+                                              .fav;
                                     });
                                   },
                                   icon: Icon(Icons.star,
-                                      color: _cemojis.elementAt(index).fav
-                                          ? Colors.yellow
-                                          : Colors.grey),
+                                      color:
+                                          widget.emojiList.elementAt(index).fav
+                                              ? Colors.yellow
+                                              : Colors.grey),
                                 ),
                                 IconButton(
                                   onPressed: () {},

@@ -11,9 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:critical_app/Pages/channel_drawer.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'Classes/message.dart';
 import 'Pages/emoji_manager.dart';
+import 'Classes/firebasefile.dart';
 
 typedef StringVoidFunc = void Function(String);
 
@@ -33,6 +35,29 @@ class App extends StatelessWidget {
   }
 }
 
+class FirebaseApi {
+  static Future<List<String>> _getDownloadLinks(List<Reference> refs) =>
+      Future.wait(refs.map((ref) => ref.getDownloadURL()).toList());
+
+  static Future<List<FirebaseFile>> listAll(String path) async {
+    final ref = FirebaseStorage.instance.ref('Emojis/');
+    final result = await ref.listAll();
+
+    final urls = await _getDownloadLinks(result.items);
+    return urls
+        .asMap()
+        .map((index, url) {
+          final ref = result.items[index];
+          final name = ref.name;
+          final file = FirebaseFile(ref: ref, name: name, url: url);
+
+          return MapEntry(index, file);
+        })
+        .values
+        .toList();
+  }
+}
+
 class ChatScreen extends StatefulWidget {
   final User user;
   const ChatScreen({Key? key, required this.user}) : super(key: key);
@@ -45,11 +70,9 @@ class _ChatScreenState extends State<ChatScreen> {
   late TextEditingController controller;
   late ScrollController scrollController;
   late bool emoji;
+  late Future<List<FirebaseFile>> futureFiles;
   Map<String, Color> userMap = {};
-  Map<int, String> emojiMap = {
-    0: "Fallen.png",
-    1: "RemiDance.gif",
-  };
+  List<CustomEmoji> emojiList = [];
   String chat = "General";
   late UserData user;
   XFile? imageFile;
@@ -130,23 +153,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void checkForEmojis(String text) {
-    int first = text.indexOf(':');
-    int last = text.indexOf(':', first + 1);
-    if (first != last) {
-      String emoji = text.substring(first + 1, last);
-      //print(emoji); //fallen
-      emojiMap.forEach((key, value) {
-        String emojiName = value.substring(0, value.lastIndexOf('.'));
-        if (emoji == emojiName.toLowerCase()) {
-          //print('SUCCESSS');
-        }
-      });
-    }
-  }
-
   @override
   void initState() {
+    futureFiles = FirebaseApi.listAll('Emojis/');
     controller = TextEditingController();
     scrollController = ScrollController();
     emoji = false;
@@ -164,6 +173,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final fs = FirebaseStorage.instance;
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
@@ -193,6 +203,27 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
+          FutureBuilder<List<FirebaseFile>>(
+              future: futureFiles,
+              builder: (context, snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return Center(child: CircularProgressIndicator());
+                  default:
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Some error occurred!'));
+                    } else {
+                      final files = snapshot.data!;
+                      for (var item in files) {
+                        emojiList.add(CustomEmoji(
+                            item.name,
+                            item.name
+                                .substring(0, item.name.lastIndexOf("."))));
+                      }
+                      return Container();
+                    }
+                }
+              }),
           Expanded(
             child: StreamBuilder(
               stream: userDataSnapshots(),
@@ -256,20 +287,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ? BubbleChat(
                                     isSender: isSender,
                                     text: message.text,
-                                    emojiMap: emojiMap,
+                                    emojiList: emojiList,
                                   )
-                                // BubbleNormal(
-                                //     text: message.text,
-                                //     isSender: isSender,
-                                //     color: isSender
-                                //         ? Colors.blue[400]!
-                                //         : Colors.grey[400]!,
-                                //     tail: true,
-                                //     textStyle: const TextStyle(
-                                //       fontSize: 20,
-                                //       color: Colors.black,
-                                //     ),
-                                //   )
                                 : Container(),
                             message.type == 1
                                 ? Container(
@@ -411,7 +430,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: () {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
-                      checkForEmojis(text);
                       addMessage(chat, text, user.name, 0);
                       controller.clear();
                     }
@@ -446,7 +464,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   padding: const EdgeInsets.all(6.0),
                   height: 250,
                   child: GridView.builder(
-                    itemCount: emojiMap.length,
+                    itemCount: emojiList.length,
                     itemBuilder: (context, index) {
                       return Container(
                         decoration: BoxDecoration(
@@ -454,7 +472,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               Border.all(color: Colors.grey[850]!, width: 2),
                         ),
                         child: FutureBuilder(
-                          future: fs.ref(emojiMap[index]).getDownloadURL(),
+                          future:
+                              fs.ref(emojiList[index].path).getDownloadURL(),
                           builder: (BuildContext context,
                               AsyncSnapshot<String> snapshot) {
                             if (!snapshot.hasData) {
@@ -465,7 +484,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 setState(() {
                                   controller.text = controller.text +
                                       " :" +
-                                      emojiMap[index]! +
+                                      emojiList[index].code +
                                       ":";
                                 });
                               },
@@ -491,8 +510,8 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           BottomBar(
             screen: 0,
+            emojiList: emojiList,
             email: widget.user.email!,
-            emojiMap: emojiMap,
           ),
         ],
       ),
@@ -525,12 +544,12 @@ class MessageInfo {
 class BubbleChat extends StatelessWidget {
   final bool isSender;
   final String text;
-  final Map<int, String> emojiMap;
+  final List<CustomEmoji> emojiList;
   const BubbleChat(
       {Key? key,
       required this.isSender,
       required this.text,
-      required this.emojiMap})
+      required this.emojiList})
       : super(key: key);
 
   @override
@@ -545,15 +564,14 @@ class BubbleChat extends StatelessWidget {
     if (message.length > 1) {
       for (MessageInfo item in message) {
         if (item.info.startsWith(':') && item.info.endsWith(':')) {
-          emojiMap.forEach((key, value) {
-            String emojiName = value.substring(0, value.lastIndexOf('.'));
+          for (var index in emojiList) {
             if (item.info.substring(1, item.info.length - 1).toLowerCase() ==
-                emojiName.toLowerCase()) {
+                index.code.toLowerCase()) {
               item.isText = false;
-              item.info = value;
-              print('SUCCESSS');
+              item.info = index.path;
+              //print('SUCCESSS');
             }
-          });
+          }
         }
       }
       List<MessageInfo> newMesage = [];
@@ -572,15 +590,14 @@ class BubbleChat extends StatelessWidget {
     } else {
       for (MessageInfo item in message) {
         if (item.info.startsWith(':') && item.info.endsWith(':')) {
-          emojiMap.forEach((key, value) {
-            String emojiName = value.substring(0, value.lastIndexOf('.'));
+          for (var index in emojiList) {
             if (item.info.substring(1, item.info.length - 1).toLowerCase() ==
-                emojiName.toLowerCase()) {
+                index.code.toLowerCase()) {
               item.isText = false;
-              item.info = value;
-              print('SUCCESSS');
+              item.info = index.path;
+              //print('SUCCESSS');
             }
-          });
+          }
         }
       }
     }
@@ -670,12 +687,12 @@ class BubbleChat extends StatelessWidget {
 class BottomBar extends StatelessWidget {
   final int screen;
   final String email;
-  final Map<int, String> emojiMap;
-  const BottomBar({
+  List<CustomEmoji> emojiList = [];
+  BottomBar({
     Key? key,
     required this.screen,
     required this.email,
-    required this.emojiMap,
+    required this.emojiList,
   }) : super(key: key);
 
   @override
@@ -716,7 +733,7 @@ class BottomBar extends StatelessWidget {
                       : Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
-                                EmojiManager(emojimap: emojiMap),
+                                EmojiManager(cemojis: emojiList),
                           ),
                         );
                 },
@@ -742,7 +759,7 @@ class BottomBar extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (context) => ProfileScreen(
                               userMail: email,
-                              emojiMap: emojiMap,
+                              emojiList: emojiList,
                             ),
                           ),
                         );
