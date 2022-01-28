@@ -214,6 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       return Center(child: Text('Some error occurred!'));
                     } else {
                       final files = snapshot.data!;
+                      emojiList.clear();
                       for (var item in files) {
                         emojiList.add(CustomEmoji(
                             item.name,
@@ -713,7 +714,7 @@ class BottomBar extends StatelessWidget {
                   screen == 0 ? Container() : Navigator.pop(context);
                 },
                 icon: Icon(
-                  Icons.chat_bubble,
+                  screen == 0 ? Icons.chat_bubble : Icons.arrow_back_rounded,
                   color: Colors.grey[400],
                 ),
                 padding: const EdgeInsets.only(left: 16.0),
@@ -733,7 +734,7 @@ class BottomBar extends StatelessWidget {
                       : Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) =>
-                                EmojiManager(cemojis: emojiList),
+                                EmojiManager(cemojis: emojiList, email: email),
                           ),
                         );
                 },

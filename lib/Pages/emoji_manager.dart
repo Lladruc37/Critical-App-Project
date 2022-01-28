@@ -14,24 +14,39 @@ class CustomEmoji {
 
 class EmojiManager extends StatelessWidget {
   List<CustomEmoji> cemojis = [];
-  EmojiManager({Key? key, required this.cemojis}) : super(key: key);
+  final String email;
+  EmojiManager({Key? key, required this.email, required this.cemojis})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        title: const Text('Emoji Page'),
         backgroundColor: Colors.grey[700],
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            const SizedBox(width: 56),
+            Text(
+              'Emoji Page',
+              style: TextStyle(
+                color: Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
       ),
-      body: EmojiList(emojiList: cemojis),
+      body: EmojiList(emojiList: cemojis, email: email),
     );
   }
 }
 
 class EmojiList extends StatefulWidget {
   List<CustomEmoji> emojiList;
-  EmojiList({Key? key, required this.emojiList}) : super(key: key);
+  final String email;
+  EmojiList({Key? key, required this.email, required this.emojiList})
+      : super(key: key);
 
   @override
   State<EmojiList> createState() => _EmojiListState();
@@ -138,8 +153,9 @@ class _EmojiListState extends State<EmojiList> {
               _showChoiceDialog(context);
             },
             iconSize: 40,
-            icon: const Icon(
-              Icons.add,
+            icon: Icon(
+              Icons.add_box_outlined,
+              color: Colors.grey[400],
             ),
           ),
         ),
@@ -172,6 +188,12 @@ class _EmojiListState extends State<EmojiList> {
             ],
           ),
         ),
+        Divider(
+          color: Colors.grey[900],
+          indent: 6,
+          endIndent: 6,
+          thickness: 2,
+        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -180,7 +202,13 @@ class _EmojiListState extends State<EmojiList> {
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
-                      const Divider(color: Colors.black),
+                      index == 0
+                          ? Container()
+                          : const Divider(
+                              color: Colors.black,
+                              indent: 6,
+                              endIndent: 6,
+                            ),
                       ListTile(
                         leading: FutureBuilder(
                           future: fs
@@ -239,6 +267,7 @@ class _EmojiListState extends State<EmojiList> {
                 }),
           ),
         ),
+        BottomBar(screen: 1, email: widget.email, emojiList: widget.emojiList),
       ],
     );
   }
