@@ -460,9 +460,19 @@ class _ChatScreenState extends State<ChatScreen> {
                             if (!snapshot.hasData) {
                               return const SizedBox();
                             }
-                            return SizedBox(
-                              height: 64,
-                              child: Image.network(snapshot.data!),
+                            return TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  controller.text = controller.text +
+                                      " :" +
+                                      emojiMap[index]! +
+                                      ":";
+                                });
+                              },
+                              child: SizedBox(
+                                height: 64,
+                                child: Image.network(snapshot.data!),
+                              ),
                             );
                           },
                         ),
