@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:critical_app/Classes/user.dart';
 import 'package:critical_app/Pages/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -42,12 +44,13 @@ class _ChatScreenState extends State<ChatScreen> {
   late TextEditingController controller;
   late ScrollController scrollController;
   late bool emoji;
+  Map<String, Color> userMap = {};
   Map<int, String> emojiMap = {
     0: "Fallen.png",
     1: "RemiDance.gif",
   };
   String chat = "General";
-
+  late UserData user;
   XFile? imageFile;
 
   void _openGallery(BuildContext context) async {
@@ -126,31 +129,12 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  // void _awaitForDrawer(BuildContext context) {
-  //   //Scaffold.of(context).openDrawer()
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => ChannelDrawer(updateChatScreen: (String newChat) {
-  //         setState(() {
-  //           chat = newChat;
-  //         });
-  //       }),
-  //     ),
-  //   );
-  // }
-
-  // void updateScreenFunc(String newChat) {
-  //   setState(() {
-  //     chat = newChat;
-  //   });
-  // }
-
   @override
   void initState() {
     controller = TextEditingController();
     scrollController = ScrollController();
     emoji = false;
+    user = UserData.fromData("", "", const Color.fromARGB(255, 0, 0, 0));
     super.initState();
   }
 
@@ -164,7 +148,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final fs = FirebaseStorage.instance;
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
@@ -207,105 +190,125 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder(
-              stream: chatSnapshots(chat),
-              builder: (
-                BuildContext context,
-                AsyncSnapshot<List<Message>> snapshot,
-              ) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+              stream: userDataSnapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<UserData>> snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text(snapshot.error.toString()));
                 }
-                final messages = snapshot.data!;
-                return ListView.builder(
-                  controller: scrollController,
-                  reverse: true,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    DateTime lastDate;
-                    messages.last == messages[index]
-                        ? lastDate = DateTime(0, 0, 0)
-                        : lastDate = messages[index + 1].timestamp;
-                    final message = messages[index];
-                    bool isSender = widget.user.email == message.author;
-                    return Column(
-                      children: [
-                        if (lastDate.day != message.timestamp.day)
-                          NewDate(date: message.timestamp),
-                        Container(
-                          alignment:
-                              isSender ? Alignment.topRight : Alignment.topLeft,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Text(
-                              message.author,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: isSender
-                                    ? Colors.blueGrey[600]
-                                    : Colors.grey[600],
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final newUserData = snapshot.data!;
+                for (int i = 0; i < newUserData.length; ++i) {
+                  userMap[newUserData[i].name] = newUserData[i].color;
+                  if (widget.user.email! == newUserData[i].email) {
+                    user = newUserData[i];
+                  }
+                }
+                return StreamBuilder(
+                  stream: chatSnapshots(chat),
+                  builder: (
+                    BuildContext context,
+                    AsyncSnapshot<List<Message>> snapshot,
+                  ) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final messages = snapshot.data!;
+                    return ListView.builder(
+                      controller: scrollController,
+                      reverse: true,
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        DateTime lastDate;
+                        messages.last == messages[index]
+                            ? lastDate = DateTime(0, 0, 0)
+                            : lastDate = messages[index + 1].timestamp;
+                        final message = messages[index];
+                        bool isSender = user.name == message.author;
+                        return Column(
+                          children: [
+                            if (lastDate.day != message.timestamp.day)
+                              NewDate(date: message.timestamp),
+                            Container(
+                              alignment: isSender
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: Text(
+                                  message.author,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: userMap[message.author],
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        message.type == 0
-                            ? BubbleNormal(
-                                text: message.text,
-                                isSender: isSender,
-                                color: isSender
-                                    ? Colors.blue[400]!
-                                    : Colors.grey[400]!,
-                                tail: true,
-                                textStyle: const TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.black,
+                            message.type == 0
+                                ? BubbleNormal(
+                                    text: message.text,
+                                    isSender: isSender,
+                                    color: isSender
+                                        ? Colors.blue[400]!
+                                        : Colors.grey[400]!,
+                                    tail: true,
+                                    textStyle: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.black,
+                                    ),
+                                  )
+                                : Container(),
+                            message.type == 1
+                                ? Container(
+                                    alignment: isSender
+                                        ? Alignment.topRight
+                                        : Alignment.topLeft,
+                                    child: FutureBuilder(
+                                      future:
+                                          fs.ref(message.text).getDownloadURL(),
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<String> snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return const SizedBox();
+                                        }
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 4.0, horizontal: 16.0),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(10.0)),
+                                            child: Image.network(
+                                              snapshot.data!,
+                                              width: 250,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : Container(),
+                            Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              alignment: isSender
+                                  ? Alignment.topRight
+                                  : Alignment.topLeft,
+                              child: Text(
+                                '${message.timestamp.hour}:${message.timestamp.minute < 10 ? '0' : ''}${message.timestamp.minute}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
                                 ),
-                              )
-                            : Container(),
-                        message.type == 1
-                            ? Container(
-                                alignment: isSender
-                                    ? Alignment.topRight
-                                    : Alignment.topLeft,
-                                child: FutureBuilder(
-                                  future: fs.ref(message.text).getDownloadURL(),
-                                  builder: (BuildContext context,
-                                      AsyncSnapshot<String> snapshot) {
-                                    if (!snapshot.hasData) {
-                                      return const SizedBox();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4.0, horizontal: 16.0),
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10.0)),
-                                        child: Image.network(
-                                          snapshot.data!,
-                                          width: 250,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Container(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          alignment:
-                              isSender ? Alignment.topRight : Alignment.topLeft,
-                          child: Text(
-                            '${message.timestamp.hour}:${message.timestamp.minute < 10 ? '0' : ''}${message.timestamp.minute}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
+                              ),
                             ),
-                          ),
-                        ),
-                        Container(height: 10),
-                      ],
+                            Container(height: 10),
+                          ],
+                        );
+                      },
                     );
                   },
                 );
@@ -466,93 +469,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ]),
             ),
           ),
-          const Divider(
-            height: 0,
-            thickness: 2,
+          BottomBar(
+            chat: true,
+            email: widget.user.email!,
+            emojiMap: emojiMap,
           ),
-          SizedBox(
-            height: 70,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      chat = "Memes";
-                    });
-                  },
-                  icon: Icon(
-                    Icons.chat_bubble,
-                    color: Colors.grey[400],
-                  ),
-                  padding: const EdgeInsets.only(left: 16.0),
-                  iconSize: 26.0,
-                ),
-                VerticalDivider(
-                  width: 0,
-                  thickness: 2,
-                  indent: 10,
-                  endIndent: 10,
-                  color: Colors.grey[600],
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => EmojiManager(emojimap: emojiMap),
-                      ),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.emoji_objects_outlined,
-                    color: Colors.grey[400],
-                  ),
-                  padding: const EdgeInsets.only(left: 16.0),
-                  iconSize: 26.0,
-                ),
-                VerticalDivider(
-                  width: 0,
-                  thickness: 2,
-                  indent: 10,
-                  endIndent: 10,
-                  color: Colors.grey[600],
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.connect_without_contact_rounded,
-                    color: Colors.grey[400],
-                  ),
-                  padding: const EdgeInsets.only(left: 16.0),
-                  iconSize: 26.0,
-                ),
-                VerticalDivider(
-                  width: 0,
-                  thickness: 2,
-                  indent: 10,
-                  endIndent: 10,
-                  color: Colors.grey[600],
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => ProfileScreen(
-                          userMail: widget.user.email!,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.person,
-                    color: Colors.grey[400],
-                  ),
-                  padding: const EdgeInsets.only(left: 16.0),
-                  iconSize: 26.0,
-                ),
-              ],
-            ),
-          )
         ],
       ),
     );
@@ -571,6 +492,112 @@ class NewDate extends StatelessWidget {
         date: date,
         color: Colors.grey[600]!,
       ),
+    );
+  }
+}
+
+class BottomBar extends StatelessWidget {
+  final bool chat;
+  final String email;
+  final Map<int, String> emojiMap;
+  const BottomBar({
+    Key? key,
+    required this.chat,
+    required this.email,
+    required this.emojiMap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Divider(
+          height: 0,
+          thickness: 2,
+        ),
+        SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                onPressed: () {
+                  chat ? Container() : Navigator.pop(context);
+                },
+                icon: Icon(
+                  Icons.chat_bubble,
+                  color: Colors.grey[400],
+                ),
+                padding: const EdgeInsets.only(left: 16.0),
+                iconSize: 26.0,
+              ),
+              VerticalDivider(
+                width: 0,
+                thickness: 2,
+                indent: 10,
+                endIndent: 10,
+                color: Colors.grey[600],
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => EmojiManager(emojimap: emojiMap),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Icons.emoji_objects_outlined,
+                  color: Colors.grey[400],
+                ),
+                padding: const EdgeInsets.only(left: 16.0),
+                iconSize: 26.0,
+              ),
+              VerticalDivider(
+                width: 0,
+                thickness: 2,
+                indent: 10,
+                endIndent: 10,
+                color: Colors.grey[600],
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.connect_without_contact_rounded,
+                  color: Colors.grey[400],
+                ),
+                padding: const EdgeInsets.only(left: 16.0),
+                iconSize: 26.0,
+              ),
+              VerticalDivider(
+                width: 0,
+                thickness: 2,
+                indent: 10,
+                endIndent: 10,
+                color: Colors.grey[600],
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ProfileScreen(
+                        userMail: email,
+                        emojiMap: emojiMap,
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Icons.person,
+                  color: Colors.grey[400],
+                ),
+                padding: const EdgeInsets.only(left: 16.0),
+                iconSize: 26.0,
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
