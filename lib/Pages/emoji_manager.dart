@@ -49,64 +49,77 @@ class _EmojiListState extends State<EmojiList> {
     final fs = FirebaseStorage.instance;
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ListView.builder(
-              itemCount: _cemojis.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    const Divider(color: Colors.black),
-                    ListTile(
-                      leading: FutureBuilder(
-                        future: fs
-                            .ref(_cemojis.elementAt(index).path)
-                            .getDownloadURL(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<String> snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox();
-                          }
-                          return SizedBox(
-                            height: 64,
-                            child: Image.network(snapshot.data!),
-                          );
-                        },
-                      ),
-                      title: Text(_cemojis.elementAt(index).code),
-                      trailing: SizedBox(
-                        width: 150,
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _cemojis.elementAt(index).fav =
-                                        !_cemojis.elementAt(index).fav;
-                                  });
-                                },
-                                icon: Icon(Icons.star,
-                                    color: _cemojis.elementAt(index).fav
-                                        ? Colors.yellow
-                                        : Colors.grey),
-                              ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(
-                                  Icons.close,
+        Row(
+          //mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: const [
+            Text("Emoticonos"),
+            Padding(
+              padding: EdgeInsets.only(left: 50),
+              child: Text("Alias"),
+            ),
+            Text("Manage"),
+          ],
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListView.builder(
+                itemCount: _cemojis.length,
+                itemBuilder: (context, index) {
+                  return Column(
+                    children: [
+                      const Divider(color: Colors.black),
+                      ListTile(
+                        leading: FutureBuilder(
+                          future: fs
+                              .ref(_cemojis.elementAt(index).path)
+                              .getDownloadURL(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<String> snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            return SizedBox(
+                              height: 64,
+                              child: Image.network(snapshot.data!),
+                            );
+                          },
+                        ),
+                        title: Text(_cemojis.elementAt(index).code),
+                        trailing: SizedBox(
+                          width: 150,
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _cemojis.elementAt(index).fav =
+                                          !_cemojis.elementAt(index).fav;
+                                    });
+                                  },
+                                  icon: Icon(Icons.star,
+                                      color: _cemojis.elementAt(index).fav
+                                          ? Colors.yellow
+                                          : Colors.grey),
                                 ),
-                                color: Colors.red,
-                              ),
-                            ],
+                                IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(
+                                    Icons.close,
+                                  ),
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }),
+                    ],
+                  );
+                }),
+          ),
         ),
       ],
     );
