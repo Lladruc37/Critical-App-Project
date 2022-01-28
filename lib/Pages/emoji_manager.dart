@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class CustomEmoji {
@@ -14,8 +15,10 @@ class EmojiManager extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[800],
       appBar: AppBar(
         title: const Text('Emoji Page'),
+        backgroundColor: Colors.grey[700],
       ),
       body: EmojiList(eMap: emojimap),
     );
@@ -43,14 +46,69 @@ class _EmojiListState extends State<EmojiList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: _cemojis.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-              title: Row(children: [
-            Text(_cemojis[index].path),
-            Text(_cemojis[index].code),
-          ]));
-        });
+    final fs = FirebaseStorage.instance;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ListView.builder(
+              itemCount: _cemojis.length,
+              itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    const Divider(color: Colors.black),
+                    ListTile(
+                      leading: FutureBuilder(
+                        future: fs
+                            .ref(_cemojis.elementAt(index).path)
+                            .getDownloadURL(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<String> snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox();
+                          }
+                          return SizedBox(
+                            height: 64,
+                            child: Image.network(snapshot.data!),
+                          );
+                        },
+                      ),
+                      title: Text(_cemojis.elementAt(index).code),
+                      trailing: SizedBox(
+                        width: 150,
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _cemojis.elementAt(index).fav =
+                                        !_cemojis.elementAt(index).fav;
+                                  });
+                                },
+                                icon: Icon(Icons.star,
+                                    color: _cemojis.elementAt(index).fav
+                                        ? Colors.yellow
+                                        : Colors.grey),
+                              ),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.close,
+                                ),
+                                color: Colors.red,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+        ),
+      ],
+    );
   }
 }

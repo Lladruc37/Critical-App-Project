@@ -333,7 +333,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               imageFile = null;
                             });
                           },
-                          child: const Icon(Icons.delete),
+                          child: const Icon(Icons.close),
                         ),
                       ),
                     ],
