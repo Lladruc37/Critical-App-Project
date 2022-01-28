@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:critical_app/Classes/user.dart';
 import 'package:critical_app/Pages/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:critical_app/Pages/channel_drawer.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'Classes/message.dart';
 import 'Pages/emoji_manager.dart';
@@ -208,10 +206,10 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, snapshot) {
                 switch (snapshot.connectionState) {
                   case ConnectionState.waiting:
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   default:
                     if (snapshot.hasError) {
-                      return Center(child: Text('Some error occurred!'));
+                      return const Center(child: Text('Some error occurred!'));
                     } else {
                       final files = snapshot.data!;
                       emojiList.clear();
@@ -559,7 +557,6 @@ class BubbleChat extends StatelessWidget {
     List<String> splits = text.split(' ');
     List<MessageInfo> message = [];
     for (String element in splits) {
-      print(element);
       message.add(MessageInfo(element));
     }
     if (message.length > 1) {
@@ -570,7 +567,6 @@ class BubbleChat extends StatelessWidget {
                 index.code.toLowerCase()) {
               item.isText = false;
               item.info = index.path;
-              //print('SUCCESSS');
             }
           }
         }
@@ -711,7 +707,9 @@ class BottomBar extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  screen == 0 ? Container() : Navigator.pop(context);
+                  screen == 0
+                      ? Container()
+                      : Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 icon: Icon(
                   screen == 0 ? Icons.chat_bubble : Icons.arrow_back_rounded,
