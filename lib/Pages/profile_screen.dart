@@ -110,7 +110,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.all(20.0),
                           child: Text(
                             widget.userMail,
-                            style: const TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[500],
+                            ),
                           ),
                         ),
                         Padding(

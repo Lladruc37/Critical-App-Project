@@ -40,18 +40,16 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
         child: Column(
           children: [
             const SizedBox(height: 18),
-            const Center(
+            Center(
               child: Text(
                 'List of chats',
-                style: TextStyle(color: Colors.white, fontSize: 30),
+                style: TextStyle(color: Colors.grey[300], fontSize: 30),
               ),
               heightFactor: 1.75,
             ),
             Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black.withAlpha(200)),
-              ),
               height: 500,
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: ListView.separated(
                 padding: EdgeInsets
                     .zero, //This is necessary to remove a ListView's default padding
@@ -95,7 +93,7 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
                         text: text,
                         color: widget.chat == text
                             ? Colors.blue.shade300
-                            : Colors.white,
+                            : Colors.white60,
                         onClicked: () {
                           widget.updateChatScreen(text);
                           selectedItem(context, text);
@@ -110,18 +108,18 @@ class _ChannelDrawerState extends State<ChannelDrawer> {
               ),
             ),
             const Spacer(),
-            const Text(
+            Text(
               "Logged in as:",
               style: TextStyle(
-                color: Colors.white70,
+                color: Colors.grey[400],
                 fontSize: 15,
               ),
             ),
             const Padding(padding: EdgeInsets.only(top: 2.0)),
             Text(
               widget.user,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Colors.grey[500],
                 fontSize: 18,
               ),
             ),

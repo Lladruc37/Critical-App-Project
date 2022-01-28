@@ -171,12 +171,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final fs = FirebaseStorage.instance;
-    int favCount = 0;
-    for (var item in emojiList) {
-      if (item.fav) {
-        favCount++;
-      }
-    }
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.grey[800],
@@ -467,123 +461,47 @@ class _ChatScreenState extends State<ChatScreen> {
                 Container(
                   padding: const EdgeInsets.all(6.0),
                   height: 250,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text("Favourites"),
-                      ),
-                      Divider(
-                        indent: 6,
-                        endIndent: 6,
-                        thickness: 1.5,
-                        color: Colors.grey[850],
-                      ),
-                      favCount == 0
-                          ? Container()
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              itemCount: favCount,
-                              itemBuilder: (context, index) {
-                                return emojiList[index].fav
-                                    ? Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color: Colors.grey[850]!,
-                                              width: 2),
-                                        ),
-                                        child: FutureBuilder(
-                                          future: fs
-                                              .ref(emojiList[index].path)
-                                              .getDownloadURL(),
-                                          builder: (BuildContext context,
-                                              AsyncSnapshot<String> snapshot) {
-                                            if (!snapshot.hasData) {
-                                              return const SizedBox();
-                                            }
-                                            return TextButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  controller.text = controller
-                                                          .text +
-                                                      " :" +
-                                                      emojiList[index].code +
-                                                      ":";
-                                                });
-                                              },
-                                              child: SizedBox(
-                                                height: 64,
-                                                child: Image.network(
-                                                    snapshot.data!),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      )
-                                    : Container();
-                              },
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 6,
-                                crossAxisSpacing: 5,
-                                mainAxisSpacing: 5,
-                              ),
-                            ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text("All"),
-                      ),
-                      Divider(
-                        indent: 6,
-                        endIndent: 6,
-                        thickness: 1.5,
-                        color: Colors.grey[850],
-                      ),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        itemCount: emojiList.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: Colors.grey[850]!, width: 2),
-                            ),
-                            child: FutureBuilder(
-                              future: fs
-                                  .ref(emojiList[index].path)
-                                  .getDownloadURL(),
-                              builder: (BuildContext context,
-                                  AsyncSnapshot<String> snapshot) {
-                                if (!snapshot.hasData) {
-                                  return const SizedBox();
-                                }
-                                return TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      controller.text = controller.text +
-                                          " :" +
-                                          emojiList[index].code +
-                                          ":";
-                                    });
-                                  },
-                                  child: SizedBox(
-                                    height: 64,
-                                    child: Image.network(snapshot.data!),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 6,
-                          crossAxisSpacing: 5,
-                          mainAxisSpacing: 5,
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    itemCount: emojiList.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border:
+                              Border.all(color: Colors.grey[850]!, width: 2),
                         ),
-                      ),
-                    ],
+                        child: FutureBuilder(
+                          future:
+                              fs.ref(emojiList[index].path).getDownloadURL(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<String> snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+                            return TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  controller.text = controller.text +
+                                      " :" +
+                                      emojiList[index].code +
+                                      ":";
+                                });
+                              },
+                              child: SizedBox(
+                                height: 64,
+                                child: Image.network(snapshot.data!),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5,
+                    ),
                   ),
                 ),
               ]),

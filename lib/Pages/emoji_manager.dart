@@ -8,8 +8,7 @@ import 'package:image_picker/image_picker.dart';
 class CustomEmoji {
   String path;
   String code;
-  bool fav;
-  CustomEmoji(this.path, this.code, {this.fav = false});
+  CustomEmoji(this.path, this.code);
 }
 
 class EmojiManager extends StatelessWidget {
@@ -76,20 +75,18 @@ class _EmojiListState extends State<EmojiList> {
     setState(() {
       imageFile = pickedFile!;
     });
-
-    Navigator.pop(context);
   }
 
   Future<void> uploadFileAbs(String filePath, String name) async {
     File file = File(filePath);
-    await FirebaseStorage.instance.ref('Emojis/$name.png').putFile(file);
+    await FirebaseStorage.instance.ref(filePath).putFile(file);
     setState(() {
       imageFile = null;
     });
   }
 
   Future<void> deleteFileAbs(String filePath) async {
-    await FirebaseStorage.instance.ref("Emojis/" + filePath).delete();
+    await FirebaseStorage.instance.ref(filePath).delete();
   }
 
   @override
@@ -113,34 +110,42 @@ class _EmojiListState extends State<EmojiList> {
         Padding(
           padding: const EdgeInsets.only(top: 12),
           child: Row(
-            //mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: const [
+            children: [
               Padding(
-                padding: EdgeInsets.only(left: 12),
+                padding: const EdgeInsets.only(left: 12),
                 child: Text(
                   "Emoticonos",
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[400],
+                  ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(left: 20),
+                padding: const EdgeInsets.only(left: 20),
                 child: Text(
                   "Alias",
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[400],
+                  ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(left: 120),
+                padding: const EdgeInsets.only(left: 120),
                 child: Text(
                   "Delete",
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[400],
+                  ),
                 ),
               ),
             ],
           ),
         ),
         Divider(
-          color: Colors.grey[900],
+          color: Colors.grey[500],
           indent: 6,
           endIndent: 6,
           thickness: 2,
@@ -155,8 +160,8 @@ class _EmojiListState extends State<EmojiList> {
                     children: [
                       index == 0
                           ? Container()
-                          : const Divider(
-                              color: Colors.black,
+                          : Divider(
+                              color: Colors.grey[500],
                               indent: 6,
                               endIndent: 6,
                             ),
@@ -178,7 +183,12 @@ class _EmojiListState extends State<EmojiList> {
                         ),
                         title: Padding(
                           padding: const EdgeInsets.only(left: 38),
-                          child: Text(widget.emojiList.elementAt(index).code),
+                          child: Text(
+                            widget.emojiList.elementAt(index).code,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                            ),
+                          ),
                         ),
                         trailing: SizedBox(
                           width: 150,
@@ -207,42 +217,47 @@ class _EmojiListState extends State<EmojiList> {
                 }),
           ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: Focus(
-                onFocusChange: (value) {
-                  if (value) {}
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: controller,
+        imageFile != null
+            ? Row(
+                children: [
+                  Expanded(
+                    child: Focus(
+                      onFocusChange: (value) {
+                        if (value) {}
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          controller: controller,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                final text = controller.text.trim();
-                if (text.isNotEmpty) {
-                  if (imageFile != null) {
-                    uploadFileAbs(imageFile!.path, text);
-                  }
-                  controller.clear();
-                }
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: IconButton(
+                      onPressed: () {
+                        final text = controller.text.trim();
+                        if (text.isNotEmpty) {
+                          if (imageFile != null) {
+                            uploadFileAbs(imageFile!.path, text);
+                          }
+                          controller.clear();
+                        }
 
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-              icon: Icon(
-                Icons.send,
-                color: Colors.grey[400],
-              ),
-              padding: const EdgeInsets.only(left: 16.0),
-              iconSize: 26.0,
-            ),
-          ],
-        ),
+                        FocusManager.instance.primaryFocus?.unfocus();
+                      },
+                      icon: Icon(
+                        Icons.send,
+                        color: Colors.grey[400],
+                      ),
+                      padding: const EdgeInsets.only(left: 16.0),
+                      iconSize: 26.0,
+                    ),
+                  ),
+                ],
+              )
+            : Container(),
         BottomBar(screen: 1, email: widget.email, emojiList: widget.emojiList),
       ],
     );
