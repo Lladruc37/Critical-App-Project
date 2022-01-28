@@ -537,7 +537,34 @@ class BubbleChat extends StatelessWidget {
         if (item.info.startsWith(':') && item.info.endsWith(':')) {
           emojiMap.forEach((key, value) {
             String emojiName = value.substring(0, value.lastIndexOf('.'));
-            if (item.info.substring(1, item.info.length - 1) ==
+            if (item.info.substring(1, item.info.length - 1).toLowerCase() ==
+                emojiName.toLowerCase()) {
+              item.isText = false;
+              item.info = value;
+              print('SUCCESSS');
+            }
+          });
+        }
+      }
+      List<MessageInfo> newMesage = [];
+      int i = 0;
+      newMesage.add(MessageInfo(""));
+      for (MessageInfo item in message) {
+        if (item.isText) {
+          newMesage[i].info = newMesage[i].info + item.info + " ";
+        } else {
+          i += 2;
+          newMesage.add(item);
+          newMesage.add(MessageInfo(""));
+        }
+      }
+      message = newMesage;
+    } else {
+      for (MessageInfo item in message) {
+        if (item.info.startsWith(':') && item.info.endsWith(':')) {
+          emojiMap.forEach((key, value) {
+            String emojiName = value.substring(0, value.lastIndexOf('.'));
+            if (item.info.substring(1, item.info.length - 1).toLowerCase() ==
                 emojiName.toLowerCase()) {
               item.isText = false;
               item.info = value;
