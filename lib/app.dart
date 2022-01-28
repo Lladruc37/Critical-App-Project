@@ -174,17 +174,6 @@ class _ChatScreenState extends State<ChatScreen> {
           chat,
           style: TextStyle(color: Colors.grey[400]),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: Colors.grey[400],
-            ),
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-            },
-          )
-        ],
       ),
       body: Column(
         children: [
@@ -561,22 +550,6 @@ class BottomBar extends StatelessWidget {
                 color: Colors.grey[600],
               ),
               IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.connect_without_contact_rounded,
-                  color: Colors.grey[400],
-                ),
-                padding: const EdgeInsets.only(left: 16.0),
-                iconSize: 26.0,
-              ),
-              VerticalDivider(
-                width: 0,
-                thickness: 2,
-                indent: 10,
-                endIndent: 10,
-                color: Colors.grey[600],
-              ),
-              IconButton(
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -594,6 +567,22 @@ class BottomBar extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 16.0),
                 iconSize: 26.0,
               ),
+              VerticalDivider(
+                width: 0,
+                thickness: 2,
+                indent: 10,
+                endIndent: 10,
+                color: Colors.grey[600],
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.logout,
+                  color: Colors.grey[400],
+                ),
+                onPressed: () {
+                  FirebaseAuth.instance.signOut();
+                },
+              )
             ],
           ),
         )
