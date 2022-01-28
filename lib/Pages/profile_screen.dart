@@ -160,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           BottomBar(
-            chat: false,
+            screen: 2,
             email: widget.userMail,
             emojiMap: widget.emojiMap,
           ),

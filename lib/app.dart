@@ -480,7 +480,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           BottomBar(
-            chat: true,
+            screen: 0,
             email: widget.user.email!,
             emojiMap: emojiMap,
           ),
@@ -658,12 +658,12 @@ class BubbleChat extends StatelessWidget {
 }
 
 class BottomBar extends StatelessWidget {
-  final bool chat;
+  final int screen;
   final String email;
   final Map<int, String> emojiMap;
   const BottomBar({
     Key? key,
-    required this.chat,
+    required this.screen,
     required this.email,
     required this.emojiMap,
   }) : super(key: key);
@@ -683,7 +683,7 @@ class BottomBar extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  chat ? Container() : Navigator.pop(context);
+                  screen == 0 ? Container() : Navigator.pop(context);
                 },
                 icon: Icon(
                   Icons.chat_bubble,
@@ -701,11 +701,14 @@ class BottomBar extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => EmojiManager(emojimap: emojiMap),
-                    ),
-                  );
+                  screen == 1
+                      ? Container()
+                      : Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EmojiManager(emojimap: emojiMap),
+                          ),
+                        );
                 },
                 icon: Icon(
                   Icons.emoji_objects_outlined,
@@ -723,14 +726,16 @@ class BottomBar extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => ProfileScreen(
-                        userMail: email,
-                        emojiMap: emojiMap,
-                      ),
-                    ),
-                  );
+                  screen == 2
+                      ? Container()
+                      : Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ProfileScreen(
+                              userMail: email,
+                              emojiMap: emojiMap,
+                            ),
+                          ),
+                        );
                 },
                 icon: Icon(
                   Icons.person,
