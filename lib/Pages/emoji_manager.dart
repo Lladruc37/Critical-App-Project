@@ -137,6 +137,10 @@ class _EmojiListState extends State<EmojiList> {
     });
   }
 
+  Future<void> deleteFileAbs(String filePath) async {
+    await FirebaseStorage.instance.ref("Emojis/" + filePath).delete();
+  }
+
   @override
   Widget build(BuildContext context) {
     final fs = FirebaseStorage.instance;
@@ -251,7 +255,14 @@ class _EmojiListState extends State<EmojiList> {
                                               : Colors.grey),
                                 ),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    setState(() {
+                                      deleteFileAbs(widget.emojiList
+                                          .elementAt(index)
+                                          .path);
+                                      widget.emojiList.removeAt(index);
+                                    });
+                                  },
                                   icon: const Icon(
                                     Icons.close,
                                   ),
