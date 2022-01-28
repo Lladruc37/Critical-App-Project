@@ -54,11 +54,19 @@ class EmojiList extends StatefulWidget {
 
 class _EmojiListState extends State<EmojiList> {
   XFile? imageFile;
+  late TextEditingController controller;
   late Future<List<FirebaseFile>> futureFiles;
   @override
   void initState() {
+    controller = TextEditingController();
     futureFiles = FirebaseApi.listAll('Emojis/');
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   void _openGallery(BuildContext context) async {
@@ -72,66 +80,9 @@ class _EmojiListState extends State<EmojiList> {
     Navigator.pop(context);
   }
 
-  void _openCamera(BuildContext context) async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-    );
-    setState(() {
-      imageFile = pickedFile!;
-    });
-    Navigator.pop(context);
-  }
-
-  Future<void> _showChoiceDialog(BuildContext context) {
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text(
-              "Choose option",
-              style: TextStyle(color: Colors.blue),
-            ),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: [
-                  const Divider(
-                    height: 1,
-                    color: Colors.blue,
-                  ),
-                  ListTile(
-                    onTap: () {
-                      _openGallery(context);
-                    },
-                    title: const Text("Gallery"),
-                    leading: const Icon(
-                      Icons.account_box,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const Divider(
-                    height: 1,
-                    color: Colors.blue,
-                  ),
-                  ListTile(
-                    onTap: () {
-                      _openCamera(context);
-                    },
-                    title: const Text("Camera"),
-                    leading: const Icon(
-                      Icons.camera,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-  }
-
   Future<void> uploadFileAbs(String filePath, String name) async {
     File file = File(filePath);
-    await FirebaseStorage.instance.ref('Emojis/$name').putFile(file);
+    await FirebaseStorage.instance.ref('Emojis/$name.png').putFile(file);
     setState(() {
       imageFile = null;
     });
@@ -150,11 +101,7 @@ class _EmojiListState extends State<EmojiList> {
           padding: const EdgeInsets.only(left: 300),
           child: IconButton(
             onPressed: () {
-              // String name = imageFile!.path.split('/').last;
-              // uploadFileAbs(imageFile!.path, name).then((value) {
-              //   _cemojis.add(CustomEmoji(name, name));
-              // });
-              _showChoiceDialog(context);
+              _openGallery(context);
             },
             iconSize: 40,
             icon: Icon(
@@ -185,7 +132,7 @@ class _EmojiListState extends State<EmojiList> {
               Padding(
                 padding: EdgeInsets.only(left: 120),
                 child: Text(
-                  "Manage",
+                  "Delete",
                   style: TextStyle(fontSize: 20),
                 ),
               ),
@@ -236,39 +183,21 @@ class _EmojiListState extends State<EmojiList> {
                         trailing: SizedBox(
                           width: 150,
                           child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      widget.emojiList.elementAt(index).fav =
-                                          !widget.emojiList
-                                              .elementAt(index)
-                                              .fav;
-                                    });
-                                  },
-                                  icon: Icon(Icons.star,
-                                      color:
-                                          widget.emojiList.elementAt(index).fav
-                                              ? Colors.yellow
-                                              : Colors.grey),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 48),
+                              child: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    deleteFileAbs(
+                                        widget.emojiList.elementAt(index).path);
+                                    widget.emojiList.removeAt(index);
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.close,
                                 ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      deleteFileAbs(widget.emojiList
-                                          .elementAt(index)
-                                          .path);
-                                      widget.emojiList.removeAt(index);
-                                    });
-                                  },
-                                  icon: const Icon(
-                                    Icons.close,
-                                  ),
-                                  color: Colors.red,
-                                ),
-                              ],
+                                color: Colors.red,
+                              ),
                             ),
                           ),
                         ),
@@ -277,6 +206,42 @@ class _EmojiListState extends State<EmojiList> {
                   );
                 }),
           ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: Focus(
+                onFocusChange: (value) {
+                  if (value) {}
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: controller,
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) {
+                  if (imageFile != null) {
+                    uploadFileAbs(imageFile!.path, text);
+                  }
+                  controller.clear();
+                }
+
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              icon: Icon(
+                Icons.send,
+                color: Colors.grey[400],
+              ),
+              padding: const EdgeInsets.only(left: 16.0),
+              iconSize: 26.0,
+            ),
+          ],
         ),
         BottomBar(screen: 1, email: widget.email, emojiList: widget.emojiList),
       ],
