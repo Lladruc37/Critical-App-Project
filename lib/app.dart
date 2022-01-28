@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:critical_app/Classes/user.dart';
@@ -129,6 +130,21 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void checkForEmojis(String text) {
+    int first = text.indexOf(':');
+    int last = text.indexOf(':', first + 1);
+    if (first != last) {
+      String emoji = text.substring(first + 1, last);
+      //print(emoji); //fallen
+      emojiMap.forEach((key, value) {
+        String emojiName = value.substring(0, value.lastIndexOf('.'));
+        if (emoji == emojiName.toLowerCase()) {
+          //print('SUCCESSS');
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     controller = TextEditingController();
@@ -237,18 +253,23 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                             ),
                             message.type == 0
-                                ? BubbleNormal(
-                                    text: message.text,
+                                ? BubbleChat(
                                     isSender: isSender,
-                                    color: isSender
-                                        ? Colors.blue[400]!
-                                        : Colors.grey[400]!,
-                                    tail: true,
-                                    textStyle: const TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.black,
-                                    ),
+                                    text: message.text,
+                                    emojiMap: emojiMap,
                                   )
+                                // BubbleNormal(
+                                //     text: message.text,
+                                //     isSender: isSender,
+                                //     color: isSender
+                                //         ? Colors.blue[400]!
+                                //         : Colors.grey[400]!,
+                                //     tail: true,
+                                //     textStyle: const TextStyle(
+                                //       fontSize: 20,
+                                //       color: Colors.black,
+                                //     ),
+                                //   )
                                 : Container(),
                             message.type == 1
                                 ? Container(
@@ -390,14 +411,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: () {
                     final text = controller.text.trim();
                     if (text.isNotEmpty) {
-                      addMessage(chat, text, widget.user.email.toString(), 0);
+                      checkForEmojis(text);
+                      addMessage(chat, text, user.name, 0);
                       controller.clear();
                     }
                     if (imageFile != null) {
                       String name = imageFile!.path.split('/').last;
                       uploadFileAbs(imageFile!.path, name).then((value) {
-                        addMessage(chat, 'Files/$name',
-                            widget.user.email.toString(), 1);
+                        addMessage(chat, 'Files/$name', user.name, 1);
                       });
                     }
                     FocusManager.instance.primaryFocus?.unfocus();
@@ -481,6 +502,130 @@ class NewDate extends StatelessWidget {
         date: date,
         color: Colors.grey[600]!,
       ),
+    );
+  }
+}
+
+class MessageInfo {
+  String info;
+  bool isText;
+  MessageInfo(this.info, {this.isText = true});
+}
+
+class BubbleChat extends StatelessWidget {
+  final bool isSender;
+  final String text;
+  final Map<int, String> emojiMap;
+  const BubbleChat(
+      {Key? key,
+      required this.isSender,
+      required this.text,
+      required this.emojiMap})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final fs = FirebaseStorage.instance;
+    List<String> splits = text.split(' ');
+    List<MessageInfo> message = [];
+    for (String element in splits) {
+      print(element);
+      message.add(MessageInfo(element));
+    }
+    if (message.length > 1) {
+      for (MessageInfo item in message) {
+        if (item.info.startsWith(':') && item.info.endsWith(':')) {
+          emojiMap.forEach((key, value) {
+            String emojiName = value.substring(0, value.lastIndexOf('.'));
+            if (item.info.substring(1, item.info.length - 1) ==
+                emojiName.toLowerCase()) {
+              item.isText = false;
+              item.info = value;
+              print('SUCCESSS');
+            }
+          });
+        }
+      }
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        isSender
+            ? Expanded(
+                child: Container(),
+              )
+            : Container(),
+        Container(
+          alignment: isSender ? Alignment.topRight : Alignment.topLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
+          child: Container(
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Padding(
+                padding: isSender
+                    ? const EdgeInsets.only(left: 6.0)
+                    : const EdgeInsets.only(right: 6.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width - 100,
+                      minWidth: 15),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (MessageInfo item in message)
+                        item.isText
+                            ? Flexible(
+                                child: Text(
+                                  item.info,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                height: 34,
+                                width: 34,
+                                alignment: isSender
+                                    ? Alignment.topRight
+                                    : Alignment.topLeft,
+                                child: FutureBuilder(
+                                  future: fs.ref(item.info).getDownloadURL(),
+                                  builder: (BuildContext context,
+                                      AsyncSnapshot<String> snapshot) {
+                                    if (!snapshot.hasData) {
+                                      return const SizedBox();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.all(2.0),
+                                      child: Image.network(
+                                        snapshot.data!,
+                                        width: 30,
+                                        height: 30,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(25),
+                topRight: const Radius.circular(25),
+                bottomLeft: !isSender ? Radius.zero : const Radius.circular(25),
+                bottomRight: isSender ? Radius.zero : const Radius.circular(25),
+              ),
+              color: isSender ? Colors.blue[400]! : Colors.grey[400]!,
+            ),
+          ),
+        ),
+        !isSender ? Expanded(child: Container()) : Container(),
+      ],
     );
   }
 }
